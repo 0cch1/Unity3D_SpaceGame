@@ -38,18 +38,11 @@ public class Spaceship : MonoBehaviour
 
     void FireBullet()
     {
-        Vector3 bulletSpwanPos = transform.position + transform.forward * 1.5f;
+        Vector3 bulletSpwanPos = transform.position + transform.up * 1.5f;
         GameObject bullet = Instantiate(bulletPrefab,bulletSpwanPos,transform.rotation);
 
         Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
         bulletRb.velocity = transform.up * 50f;
     }
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Asteroid"))
-        {
-            Destroy(gameObject);
-        }
-    }
 }

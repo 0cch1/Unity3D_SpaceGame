@@ -23,11 +23,11 @@ public class Bullet : MonoBehaviour
 
     /*private void OnCollisionEnter(Collision collision)
     {
+        Debug.Log("Bullet collided with: " + collision.gameObject.name);
         if (collision.gameObject.CompareTag("Asteroid"))
         {
             // Destroy both the bullet and asteroid
             Destroy(collision.gameObject);
             Destroy(gameObject);
-        }
-    }*/
-}
+        }*/
+    }

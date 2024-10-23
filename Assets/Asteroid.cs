@@ -5,12 +5,13 @@ public class Asteroid : MonoBehaviour
 {
     // inspector settings
     public Rigidbody rigidBody;
-    public float splitScaleFactor = 0.5f;
+    public float splitScaleFactor = 0.3f;
     public float minSize = 0.05f;
     public float maxSize = 0.12f;
 
-    // Flag to track if asteroid has already split
-    public bool hasSplit = false;
+    
+    public bool hasSplit = false; // Flag to track if asteroid has already split
+    private bool isDestroyed = false; // flag to prevent multiple destruction
     // Use this for initialization
     void Start()
     {
@@ -27,22 +28,33 @@ public class Asteroid : MonoBehaviour
     }
     private void OnCollisionEnter(Collision collision)
     {
+        if(isDestroyed) return;
+
+        //Handle collision with player
         if (collision.gameObject.CompareTag("Player"))
         {
+            
+            GameManager.instance.LoseLife();
             GameManager.instance.RespawnPlayer();
+            
+            // hanlde collision with bullet
         } else if (collision.gameObject.CompareTag("Bullet"))
-        { 
-            Destroy(collision.gameObject);
+        {
+            Debug.Log("Asteroid hit by bullet");
+            Destroy(collision.gameObject); // Destroy bullet
 
+            //If asteroid is large split it into smaller asteroids
             if(transform.localScale.x > minSize * 2 && !hasSplit)
             {
-                //if asteroid is large, split it into smaller asteroids
                 SplitAsteroid();
-            } else
+            }
+            else
             {
                 // Destroy the asteroid if its small
-                Destroy(gameObject);
+                DestroyAsteroid();
             }
+            // Add score when asteroid is destroyed
+            GameManager.instance.AddScore(50);
         }
         // spawn fragments (the fragment prefab has no collider and has no gameplay effect)
         float colSpeed = collision.relativeVelocity.magnitude;
@@ -61,23 +73,28 @@ public class Asteroid : MonoBehaviour
 
     private void SplitAsteroid()
     {
+        if(isDestroyed) return;
+
         hasSplit = true; //Indicate the asteroid has already split
 
         //Number of smaller asteroids to create
-        int numFragments = 3;
+        int numFragments = 2;
         float newScale = transform.localScale.x * splitScaleFactor;
 
         // Ensure the new scale is not too small
         if(newScale < minSize)
         {
-            Destroy(gameObject); // Destroy the original asteoid without split
+            DestroyAsteroid(); // Destroy the original asteoid without split
             return;
         }
 
-        for(int i = 0; i < numFragments; i++)
+        for(int i = 0; i <= numFragments; i++)
         {
+            // Increase active asteroid count for each new fragmen
+            GameManager.instance.activeAsteroids++;
             // Create a new asteroid with smaller scale
-            GameObject smallerAsteroid = Instantiate(GameManager.instance.asteroidPrefab, transform.position, Quaternion.identity);
+            GameObject smallerAsteroid = Instantiate(GameManager.instance.asteroidPrefab);
+            smallerAsteroid.transform.position = transform.position;
             smallerAsteroid.transform.localScale = new Vector3(newScale, newScale, newScale);
 
             // Give the smaller asteroid a random velocity
@@ -88,7 +105,18 @@ public class Asteroid : MonoBehaviour
             // Mark the new asteroids so that they cannot split again
             Asteroid asteroidScript = smallerAsteroid.GetComponent<Asteroid>();
             asteroidScript.hasSplit = true;
+            
         }
+        DestroyAsteroid();
+    }
+
+    private void DestroyAsteroid()
+    {
+        if(isDestroyed) return;
+        isDestroyed= true;
+        //Decrease the active asteroid count
+        GameManager.instance.AsteroidDestroyed();
+        //Destroy the asteroid game object
         Destroy(gameObject);
     }
 }
